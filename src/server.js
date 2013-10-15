@@ -8,6 +8,8 @@ var express = require('express')
 
 config.client_id = process.env.GITHUB_CLIENT_ID || config.client_id;
 config.client_secret = process.env.GITHUB_CLIENT_SECRET || config.client_secret;
+config.http_proxy = process.env.HTTP_PROXY || config.http_proxy;
+config.port = process.env.PORT || config.port;
 
 if (!config.client_id || !config.client_secret)
     throw new Error('config.json must contain an object with client_id and client_secret properties.')
@@ -104,7 +106,7 @@ app.get('/logout', function(req, res) {
 app.get('/', function (req, res) {
     if (req.cookies.access_token) {
         console.log(new Date() + ' get board: ' + req.url);
-        res.render('whiteboard', req.cookies);
+        res.render('whiteboard', {cookie: req.cookies, specifiedRepo: config.specifiedRepo});
     }
     else if (req.param('code', undefined)) {
         console.log(new Date() + ' get oauth');
@@ -128,14 +130,15 @@ app.get('/', function (req, res) {
 //     });
 // }
 // else {
-app.listen(process.env.PORT || 80);
-if (process.env.HTTP_PROXY) {
-    var i = process.env.HTTP_PROXY.indexOf(':');
+app.listen(config.port || 80);
+if (config.http_proxy) {
+    var i = config.http_proxy.indexOf(':');
     proxyOptions = {
-        host: i == -1 ? process.env.HTTP_PROXY : process.env.HTTP_PROXY.substring(0, i),
-        port: i == -1 ? 80 : process.env.HTTP_PROXY.substring(i + 1)
+        host: i == -1 ? config.http_proxy : config.http_proxy.substring(0, i),
+        port: i == -1 ? 80 : config.http_proxy.substring(i + 1)
     };
     console.log('Using proxy: ' + proxyOptions.host + ':' + proxyOptions.port);
 }
-console.log('Listening on port ' + (process.env.PORT || 80));
+console.log('Listening on port ' + (config.port || 80));
 // }
+

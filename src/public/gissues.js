@@ -246,7 +246,7 @@ function getQuery() {
 	var delim = '?';
 	var query= '';
 	for (var p in options) {
-		if (options[p] && 'access_token' !== p) {
+		if (options[p] && 'access_token' !== p && 'specifiedRepo' !==p ) {
 			query += delim + p + '=' + encodeURIComponent(options[p]);
 			delim = '&';
 		}
@@ -331,7 +331,7 @@ function onReposLoaded() {
 
 function loadRepositories() {
 
-	var targetSources = 2;
+	var targetSources = options.specifiedRepo ? 3 : 2;
 	var loadedSources = 0;
 
 	// load user repos
@@ -355,7 +355,29 @@ function loadRepositories() {
 			}
 		}
 	});
-	
+	// load specified repo
+	if (options.specifiedRepo) {
+		var url = 'https://api.github.com/repos/' + options.specifiedRepo
+			+ '?' + options.access_token
+			+ '&per_page=100'
+			+ '&type=all';
+
+		$.ajax({
+			url: url,
+			error: function (xhr, textStatus, errorThrown) {
+				error('An error occurred when retrieving user repositories from GitHub.'
+					+ ' Status: ' + textStatus
+					+ ', Error: ' + errorThrown);
+			},
+			success: function (data, textStatus, xhr) {
+				repos = repos.concat(data);
+				if (++loadedSources === targetSources) {
+					onReposLoaded();
+				}
+			}
+		});
+	}
+
 	// load orgs the user belongs to			
 
 	var url = 'https://api.github.com/user/orgs'
