@@ -231,8 +231,10 @@ function loadIssues(page) {
 			}
 		},
 		success: function (data, textStatus, xhr) {
+			var count = data.length;
+			filter(data, /^https:\/\/github.com\/.*\/issues\/\d+$/);
 			issues = issues.concat(data);
-			if (data.length === 100) {
+			if (count === 100) {
 				loadIssues(page + 1);
 			}
 			else {
@@ -240,6 +242,14 @@ function loadIssues(page) {
 			}
 		}
 	});
+}
+function filter(issues, regex) {
+	for (var i=issues.length-1; i >= 0; i--) {
+		if ( issues[i].html_url && issues[i].html_url.match(regex) ) {
+			continue;
+		}
+		issues.splice(i, 1);
+	}
 }
 
 function getQuery() {
