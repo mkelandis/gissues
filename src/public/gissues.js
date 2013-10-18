@@ -201,11 +201,12 @@ function onIssuesLoaded() {
 	populateWhiteboard();
 }
 
-function loadIssues(page) {
-	var url = 'https://api.github.com/repos/' + options.repo + '/issues'
-		+ '?' + options.access_token
-		+ '&per_page=100'
-		+ '&page=' + page;
+function loadIssues(page, state, callback) {
+	var url = 'https://api.github.com/repos/' + options.repo + '/issues' + 
+		'?' + options.access_token + 
+		'&per_page=100' +
+		'&page=' + page +
+		'&state=' + state;
 
 	if (options.labels) {
 		url += '&labels=' + encodeURIComponent(options.labels);
@@ -216,7 +217,6 @@ function loadIssues(page) {
 	if (options.mentioned) {
 		url += '&mentioned=' + encodeURIComponent(options.mentioned);
 	}
-
 	$.ajax({
 		url: url,
 		error: function (xhr, textStatus, errorThrown) {
@@ -235,10 +235,11 @@ function loadIssues(page) {
 			filter(data, /^https:\/\/github.com\/.*\/issues\/\d+$/);
 			issues = issues.concat(data);
 			if (count === 100) {
-				loadIssues(page + 1);
+				loadIssues(page + 1, state, callback);
 			}
 			else {
-				onIssuesLoaded();
+				//onIssuesLoaded();
+				callback();
 			}
 		}
 	});
@@ -292,7 +293,17 @@ function onRepoSelected(repo, refresh) {
 		else {
 			issues = [];
 			loadedIssues = 0;
-			loadIssues(1);	
+			async.parallel([
+				function(callback) {
+					loadIssues(1, 'open', callback);	
+				},
+				function(callback) {
+					loadIssues(1, 'closed', callback);	
+				}
+			],
+			function(err, results) {
+				onIssuesLoaded();
+			});
 		}
 	}
 	else {
@@ -310,7 +321,7 @@ function onReposLoaded() {
 		return 0;
 	});
 
-	var matchingRepo = undefined;
+	var matchingRepo;
 	for (var i in repos) {
 		var repo = repos[i].url.substr('https://api.github.com/repos/'.length);
 		if (options.repo === repo) {
@@ -345,29 +356,15 @@ function loadRepositories() {
 	var loadedSources = 0;
 
 	// load user repos
+	loadRepos('https://api.github.com/user/repos');
 
-	var url = 'https://api.github.com/user/repos'
-		+ '?' + options.access_token
-		+ '&per_page=100'
-		+ '&type=all';
-
-	$.ajax({
-		url: url,
-		error: function (xhr, textStatus, errorThrown) {
-			error('An error occurred when retrieving user repositories from GitHub.'
-				+ ' Status: ' + textStatus
-				+ ', Error: ' + errorThrown);
-		},
-		success: function (data, textStatus, xhr) {
-			repos = repos.concat(data);
-			if (++loadedSources === targetSources) {
-				onReposLoaded();
-			}
-		}
-	});
 	// load specified repo
 	if (options.specifiedRepo) {
-		var url = 'https://api.github.com/repos/' + options.specifiedRepo
+		loadRepos('https://api.github.com/repos/' + options.specifiedRepo);
+	}
+
+	function loadRepos(repoUrl) {
+		var url = repoUrl
 			+ '?' + options.access_token
 			+ '&per_page=100'
 			+ '&type=all';
