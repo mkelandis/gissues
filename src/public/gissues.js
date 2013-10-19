@@ -24,6 +24,7 @@ function parseOptions() {
 	parseOption('labels');
 	parseOption('assignee');
 	parseOption('mentioned');
+	parseOption('milestone');
 }
 
 function error(message, severity) {
@@ -215,6 +216,9 @@ function loadIssues(page) {
 	}
 	if (options.mentioned) {
 		url += '&mentioned=' + encodeURIComponent(options.mentioned);
+	}
+	if (options.milestone) {
+		url += '&milestone=' + encodeURIComponent(options.milestone);
 	}
 
 	$.ajax({
