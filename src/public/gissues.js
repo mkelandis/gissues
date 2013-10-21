@@ -205,7 +205,7 @@ function onIssuesLoaded() {
 }
 
 function loadIssues(page, state, callback) {
-	var url = 'https://api.github.com/repos/' + options.repo + '/issues' + 
+	var url = 'https://api.github.com/repos/' + options.repo + '/issues' +
 		'?' + options.access_token + 
 		'&per_page=100' +
 		'&page=' + page +
@@ -228,11 +228,11 @@ function loadIssues(page, state, callback) {
 		url: url,
 		error: function (xhr, textStatus, errorThrown) {
 			if (xhr && xhr.status === 410) {
-				error('Issue tracking is disabled for this GitHub repository <a href="https://github.com/' 
+				callback('Issue tracking is disabled for this GitHub repository <a href="https://github.com/'
 					+ options.repo + '/admin" class="btn small gsmall success">Change it...</a>');
 			}
 			else {
-				error('An error occurred when retrieving issues from GitHub. Make sure issue tracking is enabled. '
+				callback('An error occurred when retrieving issues from GitHub. Make sure issue tracking is enabled. '
 					+ '<a href="https://github.com/' 
 					+ options.repo + '/admin" class="btn small gsmall success">Check now...</a>');
 			}
@@ -309,6 +309,9 @@ function onRepoSelected(repo, refresh) {
 				}
 			],
 			function(err, results) {
+				if (err) {
+					return error(err);
+				}
 				onIssuesLoaded();
 			});
 		}
