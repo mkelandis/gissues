@@ -38,4 +38,12 @@ body {
 #graph svg .axis path { 
 	display: none; 
 }
+#graph svg path.line.ideal {
+  stroke: #cacaca;
+  stroke-width: 3px;
+}
+#graph svg path.line {
+  fill: none;
+  stroke-width: 1px;
+}
 
