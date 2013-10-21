@@ -9,7 +9,7 @@ function getQueryParam(name) {
 	var regexS = "[\\?&]" + name + "=([^&#]*)";
 	var regex = new RegExp(regexS);
 	var results = regex.exec(window.location.href);
-	return results == null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
+	return results === null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 function parseOption(option) {
@@ -158,7 +158,7 @@ function populateWhiteboard() {
 	}
 
 	$('.gnote').mouseover(function() {
-	    $(this).css('cursor', 'move');
+		$(this).css('cursor', 'move');
 	});
 
 	$('.gissueList').sortable({ 
@@ -179,7 +179,8 @@ function parseGissueStatus(issue) {
 				var gissue = JSON.parse(issue.body.substring(index + 9, issue.body.indexOf('}', index + 9) + 1));
 				issue.gissue = {
 					order: gissue.order || maxSentinel.gissue.order,
-					status: gissue.status || 'backlog'
+					status: gissue.status || 'backlog',
+					size: gissue.size || 0
 				};
 				return;
 			}
@@ -190,7 +191,8 @@ function parseGissueStatus(issue) {
 
 	issue.gissue = {
 		order: maxSentinel.gissue.order, 
-		status: 'backlog'
+		status: 'backlog',
+		size: 0
 	};
 }
 
@@ -203,7 +205,7 @@ function onIssuesLoaded() {
 }
 
 function loadIssues(page, state, callback) {
-	var url = 'https://api.github.com/repos/' + options.repo + '/issues' + 
+	var url = 'https://api.github.com/repos/' + options.repo + '/issues' +
 		'?' + options.access_token + 
 		'&per_page=100' +
 		'&page=' + page +
@@ -226,11 +228,11 @@ function loadIssues(page, state, callback) {
 		url: url,
 		error: function (xhr, textStatus, errorThrown) {
 			if (xhr && xhr.status === 410) {
-				error('Issue tracking is disabled for this GitHub repository <a href="https://github.com/' 
+				callback('Issue tracking is disabled for this GitHub repository <a href="https://github.com/'
 					+ options.repo + '/admin" class="btn small gsmall success">Change it...</a>');
 			}
 			else {
-				error('An error occurred when retrieving issues from GitHub. Make sure issue tracking is enabled. '
+				callback('An error occurred when retrieving issues from GitHub. Make sure issue tracking is enabled. '
 					+ '<a href="https://github.com/' 
 					+ options.repo + '/admin" class="btn small gsmall success">Check now...</a>');
 			}
@@ -307,6 +309,9 @@ function onRepoSelected(repo, refresh) {
 				}
 			],
 			function(err, results) {
+				if (err) {
+					return error(err);
+				}
 				onIssuesLoaded();
 			});
 		}
@@ -444,7 +449,6 @@ function loadRepositories() {
 		}
 	});				
 }
-
 function updateOptions($changedElement) {
 	var val = $changedElement.val() ? $changedElement.val().replace(' ', '') : '';
 	var id = $changedElement.attr('id');
@@ -471,4 +475,4 @@ $(function() {
 	$('.gfilter').change(onFilterChanged).keypress(onFilterApproved);
 	loadRepositories();
 	$('#go').attr('href', getQuery());
-})		
+});
