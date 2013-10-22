@@ -19,6 +19,7 @@ async.parallel([
 	if (err) {
 		return console.log(err);
 	}
+	var milestone = results[0];
 	var issues = {'open': results[1], 'closed': results[2]};
 	var total = 0;
 	for (var i = 0; i < issues.open.length; i++) {
@@ -29,12 +30,23 @@ async.parallel([
 		parseGissueStatus(issues.closed[j]);
 		total += issues.closed[j].gissue.size;
 	}
-	idealProgress(results[0].created_at, results[0].due_on, total, function(error, days) {
-		console.log(days.length);//TODO debug
-		render(days);
+	async.parallel([
+		function(cb) {
+			idealProgress(milestone.created_at, milestone.due_on, total, cb);
+		},
+		function(cb) {
+			actualProgress(issues.closed, milestone.created_at, total, cb); 
+		}
+	], function(error, days) {
+		if (error) {
+			return console.error(error);
+		}
+		render({ideal: days[0], actual: days[1]});
 	});
 });
 function render(days) {
+	var ideal = days.ideal;
+	var actual = days.actual;
 	$('#svg').empty();
 	var rect = $('#graph')[0].getBoundingClientRect();
 	var width = rect.width;
@@ -45,8 +57,8 @@ function render(days) {
 
 	var x = d3.time.scale().range([0, width]);
 	var y = d3.scale.linear().range([height, 0]);
-	x.domain([days[0].date, days[days.length-1].date]);
-	y.domain([0, days[0].points]).nice();//TODO
+	x.domain([ideal[0].date, ideal[ideal.length-1].date]);
+	y.domain([0, ideal[0].points]).nice();//TODO
 	var xAxis = d3.svg.axis().scale(x).orient('bottom').tickSize(-height).tickFormat(function(d) {
 		return d.getDate();
 	}).ticks(5).tickPadding(10);
@@ -62,9 +74,31 @@ function render(days) {
 		return y(d.points);
 	});
 	//ideal line
-	svg.append('path').attr('class', 'ideal line').attr('d', line.interpolate('basis')(days));
+	svg.append('path').attr('class', 'ideal line').attr('d', line.interpolate('basis')(ideal));
+	svg.append('path').attr('class', 'actual line').attr('d', line.interpolate('linear').y(function(d){
+		return y(d.points);
+	})(actual));
 }
 
+function actualProgress(issues, created_at, total, callback) {
+	var head = [ { date: new Date(created_at), points: total } ];
+	var min = +Infinity;
+	var max = -Infinity;
+	for (var i = 0; i < issues.length; i++) {
+		var closed_at = issues[i].closed_at;
+		var size = issues[i].size;
+		if (size > max) {
+			max = size;
+		}
+		if (size < min) {
+			min = siez;
+		}
+		issues[i].date = new Date(closed_at);
+		total -= size;
+		issues[i].points = total;
+	}
+	callback(null, head.concat(issues));
+}
 function idealProgress(created_at, due_on, total, callback) {
 	var days = [];
 	var end = new Date(due_on);
