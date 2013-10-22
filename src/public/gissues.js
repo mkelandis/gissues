@@ -9,7 +9,7 @@ function getQueryParam(name) {
 	var regexS = "[\\?&]" + name + "=([^&#]*)";
 	var regex = new RegExp(regexS);
 	var results = regex.exec(window.location.href);
-	return results == null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
+	return results === null ? undefined : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 function parseOption(option) {
@@ -158,7 +158,7 @@ function populateWhiteboard() {
 	}
 
 	$('.gnote').mouseover(function() {
-	    $(this).css('cursor', 'move');
+		$(this).css('cursor', 'move');
 	});
 
 	$('.gissueList').sortable({ 
@@ -179,7 +179,8 @@ function parseGissueStatus(issue) {
 				var gissue = JSON.parse(issue.body.substring(index + 9, issue.body.indexOf('}', index + 9) + 1));
 				issue.gissue = {
 					order: gissue.order || maxSentinel.gissue.order,
-					status: gissue.status || 'backlog'
+					status: gissue.status || 'backlog',
+					size: gissue.size || 0
 				};
 				return;
 			}
@@ -190,7 +191,8 @@ function parseGissueStatus(issue) {
 
 	issue.gissue = {
 		order: maxSentinel.gissue.order, 
-		status: 'backlog'
+		status: 'backlog',
+		size: 0
 	};
 }
 
@@ -444,7 +446,6 @@ function loadRepositories() {
 		}
 	});				
 }
-
 function updateOptions($changedElement) {
 	var val = $changedElement.val() ? $changedElement.val().replace(' ', '') : '';
 	var id = $changedElement.attr('id');
@@ -471,4 +472,4 @@ $(function() {
 	$('.gfilter').change(onFilterChanged).keypress(onFilterApproved);
 	loadRepositories();
 	$('#go').attr('href', getQuery());
-})		
+});

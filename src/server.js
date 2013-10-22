@@ -103,10 +103,9 @@ app.get('/logout', function(req, res) {
     res.redirect('/', 302); 
 });
 
-app.get('/', function (req, res) {
+app.get('/*', function (req, res, next) {
     if (req.cookies.access_token) {
-        console.log(new Date() + ' get board: ' + req.url);
-        res.render('whiteboard', {cookie: req.cookies, specifiedRepo: config.specifiedRepo});
+	next();
     }
     else if (req.param('code', undefined)) {
         console.log(new Date() + ' get oauth');
@@ -117,6 +116,15 @@ app.get('/', function (req, res) {
         res.render('index', config);
     }
 });
+app.get('/', function (req, res) {
+        console.log(new Date() + ' get board: ' + req.url);
+        res.render('whiteboard', {cookie: req.cookies, specifiedRepo: config.specifiedRepo});
+});
+app.get('/burndown', function (req, res) {
+        console.log(new Date() + ' get burndown: ' + req.url);
+        res.render('chart', {cookie: req.cookies});
+});
+
 
 // supervisor does not seem to work well with cluster https://github.com/isaacs/node-supervisor/issues/40
 
