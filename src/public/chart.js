@@ -85,8 +85,16 @@ function render(days) {
 	}).y(function(d) {
 		return y(d.points);
 	});
+	//today mark
+	svg.append('svg:line').attr('class', 'today')
+		.attr("x1", x(new Date()))
+		.attr("y1", 0)
+		.attr("x2", x(new Date()))
+		.attr("y2", height);
+
 	//ideal line
 	svg.append('path').attr('class', 'ideal line').attr('d', line.interpolate('basis')(ideal));
+	//actual line
 	svg.append('path').attr('class', 'actual line').attr('d', line.interpolate('linear').y(function(d){
 		return y(d.points);
 	})(actual));

@@ -50,4 +50,10 @@ body {
   fill: none;
   stroke-width: 1px;
 }
+#graph svg line.today {
+  stroke: #cacaca;
+  stroke-width: 1px;
+  shape-rendering: crispEdges;
+  stroke-dasharray: 5, 5;
+}
 
