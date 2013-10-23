@@ -77,7 +77,15 @@ function render(days) {
 	var yAxis = d3.svg.axis().scale(y).orient('left').tickSize(-width).ticks(5).tickPadding(10);
 	var svg = d3.select('#svg').append('svg').attr('width', rect.width).attr('height', rect.height).append('g');
 	svg.attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-	svg.append('g').attr('class', 'x axis day').attr('transform', 'translate(0,' + height + ')').call(xAxis);
+	var gAxisX = svg.append('g').attr('class', 'x axis day').attr('transform', 'translate(0,' + height + ')').call(xAxis);
+	//legand
+	svg.selectAll('text.legend').data([{ label: 'Date', x: width - 20, y: height + 30 },{ label: 'Point', x: -40, y:0 }]).enter().append('text')
+		.attr('x', function(d) { return d.x; })
+		.attr('y', function(d) { return d.y; })
+		.text(function(d){
+			return d.label;
+		});
+
 	svg.append('g').attr('class', 'y axis').call(yAxis);
 
 	var line = d3.svg.line().interpolate('linear').x(function(d) {

@@ -52,9 +52,7 @@ function createIssueElement(issueId) {
 			+ '</span>';
 	}
 
-	var assignee = issue.assignee && issue.assignee.login 
-		? '<span class="label notice gissueLabel" style="color: black">@' + issue.assignee.login + '</span>'
-		: '';
+	var assignee = issue.assignee && issue.assignee.login ? '<span class="label notice gissueLabel" style="color: black">@' + issue.assignee.login + '</span>' : '';
 		
 	var size = issue.gissue ? '<span class="label size gissueLabel" style="color: black">size: ' + issue.gissue.size + '</span>' : '';
 

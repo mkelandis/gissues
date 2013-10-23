@@ -56,4 +56,8 @@ body {
   shape-rendering: crispEdges;
   stroke-dasharray: 5, 5;
 }
+#graph svg text {
+	font-weight: bold;
+	fill: #cacaca;
+}
 
