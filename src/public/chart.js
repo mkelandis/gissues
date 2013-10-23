@@ -1,49 +1,61 @@
+/**
+	the implementation is referred from https://github.com/radekstepan/github-burndown-chart
+*/
 (function($){
 
 var minSentinel = { gissue: { order: 0 }};
 var maxSentinel = { gissue: { order: 100 }};
 
-
-parseOptions();
-async.parallel([
-	function(callback) {
-		loadMilestones(callback);
-	},
-	function(callback) {
-		loadIssues(1, 'open', [], callback);
-	},
-	function(callback) {
-		loadIssues(1, 'closed', [], callback);
-	}
-], function(err, results) {
-	if (err) {
-		return console.log(err);
-	}
-	var milestone = results[0];
-	var issues = {'open': results[1], 'closed': results[2]};
-	var total = 0;
-	for (var i = 0; i < issues.open.length; i++) {
-		parseGissueStatus(issues.open[i]);
-		total += issues.open[i].gissue.size;
-	}
-	for (var j = 0; j < issues.closed.length; j++) {
-		parseGissueStatus(issues.closed[j]);
-		total += issues.closed[j].gissue.size;
-	}
+$(function(){
+	parseOptions();
 	async.parallel([
-		function(cb) {
-			idealProgress(milestone.created_at, milestone.due_on, total, cb);
+		function(callback) {
+			loadMilestones(callback);
 		},
-		function(cb) {
-			actualProgress(issues.closed, milestone.created_at, total, cb); 
+		function(callback) {
+			loadIssues(1, 'open', [], callback);
+		},
+		function(callback) {
+			loadIssues(1, 'closed', [], callback);
 		}
-	], function(error, days) {
-		if (error) {
-			return console.error(error);
+	], function(err, results) {
+		if (err) {
+			$('#chartErrorMessage').html(err);
+			$('#gerror').show();
+			return console.log(err);
 		}
-		render({ideal: days[0], actual: days[1]});
+		var milestone = results[0];
+		var today = new Date();
+		var thisMonday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
+		console.log(thisMonday.toUTCString());
+		if (new Date(milestone.created_at) < thisMonday)
+			milestone.created_at = thisMonday.toUTCString();
+		var issues = {'open': results[1], 'closed': results[2]};
+		var total = 0;
+		for (var i = 0; i < issues.open.length; i++) {
+			parseGissueStatus(issues.open[i]);
+			total += issues.open[i].gissue.size;
+		}
+		for (var j = 0; j < issues.closed.length; j++) {
+			parseGissueStatus(issues.closed[j]);
+			total += issues.closed[j].gissue.size;
+		}
+		async.parallel([
+			function(cb) {
+				idealProgress(milestone.created_at, milestone.due_on, total, cb);
+			},
+			function(cb) {
+				actualProgress(issues.closed, milestone.created_at, total, cb);
+			}
+		], function(error, days) {
+			if (error) {
+				return console.error(error);
+			}
+			render({ideal: days[0], actual: days[1]});
+		});
 	});
 });
+
 function render(days) {
 	var ideal = days.ideal;
 	var actual = days.actual;
@@ -78,34 +90,50 @@ function render(days) {
 	svg.append('path').attr('class', 'actual line').attr('d', line.interpolate('linear').y(function(d){
 		return y(d.points);
 	})(actual));
+
+	svg.selectAll("a.issue").data(actual.slice(1)).enter().append('svg:a').attr("xlink:href", function(d) {
+		return d.html_url;
+	}).attr("xlink:show", 'new').append('svg:circle').attr("cx", function(d) {
+		return x(d.date);
+	}).attr("cy", function(d) {
+		return y(d.points);
+	}).attr("r", function(d) {
+		return 5;
+	});
 }
 
-function actualProgress(issues, created_at, total, callback) {
-	var head = [ { date: new Date(created_at), points: total } ];
-	var min = +Infinity;
-	var max = -Infinity;
-	for (var i = 0; i < issues.length; i++) {
-		var closed_at = issues[i].closed_at;
-		var size = issues[i].size;
-		if (size > max) {
-			max = size;
+function actualProgress(issues, begin, total, callback) {
+	//sort the closed issues.
+	async.sortBy(issues, function(item, cb) {
+		cb(null, item.closed_at);
+	}, function(err, sortedIssues) {
+		var head = [ { date: new Date(begin), points: total } ];
+		var min = +Infinity;//TODO no used
+		var max = -Infinity;
+		for (var i = 0; i < sortedIssues.length; i++) {
+			var closed_at = sortedIssues[i].closed_at;
+			var size = sortedIssues[i].gissue.size;
+			if (size > max) {
+				max = size;
+			}
+			if (size < min) {
+				min = size;
+			}
+			sortedIssues[i].date = new Date(closed_at);
+			total -= size;
+			sortedIssues[i].points = total;
 		}
-		if (size < min) {
-			min = siez;
-		}
-		issues[i].date = new Date(closed_at);
-		total -= size;
-		issues[i].points = total;
-	}
-	callback(null, head.concat(issues));
+		callback(null, head.concat(sortedIssues));
+	});
+
 }
-function idealProgress(created_at, due_on, total, callback) {
+function idealProgress(begin, due_on, total, callback) {
 	var days = [];
 	var end = new Date(due_on);
-	var createdDate = new Date(created_at);
-	var y = createdDate.getFullYear();
-	var m = createdDate.getMonth();
-	var d = createdDate.getDate();
+	var beginDate = new Date(begin);
+	var y = beginDate.getFullYear();
+	var m = beginDate.getMonth();
+	var d = beginDate.getDate();
 
 	var calculateDays = function() {
 		var day = new Date(y, m, d);
@@ -128,16 +156,18 @@ function idealProgress(created_at, due_on, total, callback) {
 
 function loadMilestones(callback) {
 	if (!options.milestone) {
+		callback('No milestone specified');
 		return;
 	}
-	var url = 'https://api.github.com/repos/' + options.repo + '/milestones/' + options.milestone;
+	var url = 'https://api.github.com/repos/' + options.repo + '/milestones/' + options.milestone +
+		'?' + options.access_token;
 	$.ajax({
 		url: url,
+		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown) {
 			callback(errorThrown);
 		},
 		success: function (data, textStatus, xhr) {
-			//callback(null, JSON.parse(data));
 			callback(null, data);
 		}
 	});
@@ -185,6 +215,7 @@ function loadIssues(page, state, initial, callback) {
 	}
 	$.ajax({
 		url: url,
+		dataType: 'json',
 		error: function (xhr, textStatus, errorThrown) {
 			if (xhr && xhr.status === 410) {
 				callback('Issue tracking is disabled for this GitHub repository <a href="https://github.com/'

@@ -56,6 +56,7 @@ function createIssueElement(issueId) {
 		? '<span class="label notice gissueLabel" style="color: black">@' + issue.assignee.login + '</span>'
 		: '';
 		
+	var size = issue.gissue ? '<span class="label size gissueLabel" style="color: black">size: ' + issue.gissue.size + '</span>' : '';
 
 	var html = 
 		'<div data-id="' + issueId + '" class="span4 gnote">'
@@ -63,6 +64,7 @@ function createIssueElement(issueId) {
 			+ ' ' + issue.title
 			+ labels
 			+ assignee
+			+ size
 		+ '</div>';
 	
 	return $(html); 
@@ -298,6 +300,9 @@ function onRepoSelected(repo, refresh) {
 			refreshPage();
 		}
 		else {
+			$('li>a#burndown').attr('href','/burndown?' +
+				'repo=' + encodeURIComponent(options.repo) +
+				'&milestone=' + encodeURIComponent(options.milestone));
 			issues = [];
 			loadedIssues = 0;
 			async.parallel([
@@ -470,7 +475,7 @@ function onFilterApproved(event) {
 $(function() {
 	$.ajaxSetup({
 		dataType: "json"
-	});
+	});//TODO it's strange that this setting don't work in some browser.
 	parseOptions();
 	$('.gfilter').change(onFilterChanged).keypress(onFilterApproved);
 	loadRepositories();
