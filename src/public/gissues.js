@@ -107,15 +107,16 @@ function updateIssues(issuesToUpdate) {
 	}
 }
 
-function onIssueMoved($currentIssue) {
+function onIssueChanged($currentIssue) {
 	var currentIssue = issues[$currentIssue.attr('data-id')];
 	var $nextIssue = $currentIssue.next();
 	var nextIssue = $nextIssue[0] ? issues[$nextIssue.attr('data-id')] : maxSentinel;
 	var $prevIssue = $currentIssue.prev();
 	var prevIssue = $prevIssue[0] ? issues[$prevIssue.attr('data-id')] : minSentinel;
 	var newStatus = $currentIssue.parent().attr('id');
+	var newSize = parseInt($currentIssue.children('span.label.size').text().replace('size:',''), 10);
 
-	if (newStatus === currentIssue.gissue.status
+	if (newStatus === currentIssue.gissue.status && newSize === currentIssue.gissue.size
 		&& nextIssue.gissue.order > currentIssue.gissue.order
 		&& prevIssue.gissue.order < currentIssue.gissue.order) {
 			// current issue already has appropriate status and order; nothing to update
@@ -123,6 +124,7 @@ function onIssueMoved($currentIssue) {
 	}
 
 	currentIssue.gissue.status = newStatus;
+	currentIssue.gissue.size = newSize;
 	var issuesToUpdate = [ currentIssue ];
 
 	// all preceding siblings  that have their order equal to maxSentinel.gissue.order must 
@@ -159,7 +161,11 @@ function populateWhiteboard() {
 		$('#' + issues[i].gissue.status).append(createIssueElement(i));
 	}
 
-	$('.gnote').mouseover(function() {
+	$('.gnote').mouseover(function(e) {
+		if ($(e.target).hasClass('size')) {
+			$(e.target).css('cursor', 'pointer');
+			return;
+		}
 		$(this).css('cursor', 'move');
 	});
 
@@ -167,7 +173,7 @@ function populateWhiteboard() {
 		connectWith: '.gissueList',
 		update: function (e, ui) {
 			if (!ui.sender) {
-				onIssueMoved($(ui.item[0]));
+				onIssueChanged($(ui.item[0]));
 			}
 		}
 	});			
@@ -479,5 +485,20 @@ $(function() {
 	parseOptions();
 	$('.gfilter').change(onFilterChanged).keypress(onFilterApproved);
 	loadRepositories();
-	$('#go').attr('href', getQuery());
+	$('#go').attr('href', getQuery());//TODO there is post-get 304 problem if the href doesn't change.
+	$(function() {
+		//TODO need refactoring
+		var sel = '<select style="width: auto"><option selected="selected" value="-1">--</option><option value="1">1</option>' + 
+			'<option value="2">2</option><option value="3">3</option><option value="4">4</option>' +
+			'<option value="5">5</option><option value="6">6</option><option value="7">7</option></select>';
+		var span = '<span class="label size gissueLabel" style="color: black; cursor: pointer;">size:0</span>';
+		$('div.glive').on('click', 'div.span4 > span.size', function(e) {
+			$(this).replaceWith(sel);
+		});
+		$('div.glive').on('change', 'select', function() {
+			var $currentIssue = $(this).parent('.span4.gnote');
+			$(this).replaceWith(span.replace('size:0', 'size:'+$(this).val()));
+			onIssueChanged($currentIssue);
+		});
+	});
 });
