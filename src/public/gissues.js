@@ -371,7 +371,7 @@ function onReposLoaded() {
 
 function loadRepositories() {
 
-	var targetSources = options.specifiedRepo ? 3 : 2;
+	var targetSources = 2 + ( options.specifiedRepo ? options.specifiedRepo.length : 0 );
 	var loadedSources = 0;
 
 	// load user repos
@@ -379,7 +379,9 @@ function loadRepositories() {
 
 	// load specified repo
 	if (options.specifiedRepo) {
-		loadRepos('https://api.github.com/repos/' + options.specifiedRepo);
+		for (var i = 0; i < options.specifiedRepo.length; i++) {
+			loadRepos('https://api.github.com/repos/' + options.specifiedRepo[i]);
+		}
 	}
 
 	function loadRepos(repoUrl) {

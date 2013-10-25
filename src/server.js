@@ -118,7 +118,7 @@ app.get('/*', function (req, res, next) {
 });
 app.get('/', function (req, res) {
         console.log(new Date() + ' get board: ' + req.url);
-        res.render('whiteboard', {cookie: req.cookies, specifiedRepo: config.specifiedRepo});
+        res.render('whiteboard', {cookie: req.cookies, specifiedRepo: JSON.stringify(config.specifiedRepo)});
 });
 app.get('/burndown', function (req, res) {
         console.log(new Date() + ' get burndown: ' + req.url);

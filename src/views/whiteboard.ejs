@@ -11,7 +11,7 @@
 	<script src="http://cdnjs.cloudflare.com/ajax/libs/async/0.2.7/async.min.js" type="text/javascript"></script>
 	<script src="gissues.js" type="text/javascript"></script>
 	<script type="text/javascript">
-		var options = { access_token: '<%- cookie.access_token %>', specifiedRepo: '<%- specifiedRepo %>'};
+		var options = { access_token: '<%- cookie.access_token %>', specifiedRepo: JSON.parse('<%- specifiedRepo %>')};
 	</script>
 	<script type="text/javascript">
 
