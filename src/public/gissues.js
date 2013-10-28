@@ -304,9 +304,19 @@ function onRepoSelected(repo, refresh) {
 			refreshPage();
 		}
 		else {
+			if (options.specifiedRepo) {
+				for (var idx = 0; idx < options.specifiedRepo.length; idx++ ) {
+					var current = options.specifiedRepo[idx];
+					if (current.uri === options.repo) {
+						options.sprintSize = current.sprintSize;
+					}
+				}
+			}
+
 			$('li>a#burndown').attr('href','/burndown?' +
 				'repo=' + encodeURIComponent(options.repo) +
-				'&milestone=' + encodeURIComponent(options.milestone));
+				'&milestone=' + encodeURIComponent(options.milestone)+
+				(options.sprintSize ? '&sprintSize=' + options.sprintSize : '') );
 			issues = [];
 			loadedIssues = 0;
 			async.parallel([
@@ -380,7 +390,7 @@ function loadRepositories() {
 	// load specified repo
 	if (options.specifiedRepo) {
 		for (var i = 0; i < options.specifiedRepo.length; i++) {
-			loadRepos('https://api.github.com/repos/' + options.specifiedRepo[i]);
+			loadRepos('https://api.github.com/repos/' + options.specifiedRepo[i].uri);
 		}
 	}
 

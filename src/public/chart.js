@@ -25,11 +25,10 @@ $(function(){
 			return console.log(err);
 		}
 		var milestone = results[0];
-		var today = new Date();
-		var thisMonday = new Date(today.setDate(today.getDate() - today.getDay() + 1));
-		console.log(thisMonday.toUTCString());
-		if (new Date(milestone.created_at) < thisMonday)
-			milestone.created_at = thisMonday.toUTCString();
+		if (options.sprintSize) {
+			var beginTime = new Date(milestone.due_on).getTime() - (parseInt(options.sprintSize, 10) - 1)*24*60*60*1000;
+			milestone.created_at = new Date(beginTime).toUTCString();
+		}
 		var issues = {'open': results[1], 'closed': results[2]};
 		var total = 0;
 		for (var i = 0; i < issues.open.length; i++) {
@@ -195,6 +194,7 @@ function loadMilestones(callback) {
 function parseOptions() {
 	parseOption('repo');
 	parseOption('milestone');
+	parseOption('sprintSize');
 }
 function getQueryParam(name) {
 	name = name.replace(/[\[]/, '\\\[').replace(/[\]]/, '\\\]');
