@@ -29,6 +29,7 @@ $(function(){
 			var beginTime = new Date(milestone.due_on).getTime() - (parseInt(options.sprintSize, 10) - 1)*24*60*60*1000;
 			milestone.created_at = new Date(beginTime).toUTCString();
 		}
+		$('div.box h1').text(milestone.title + '@' + options.repo);
 		var issues = {'open': results[1], 'closed': results[2]};
 		var total = 0;
 		for (var i = 0; i < issues.open.length; i++) {
@@ -149,20 +150,28 @@ function idealProgress(begin, due_on, total, callback) {
 	var y = beginDate.getFullYear();
 	var m = beginDate.getMonth();
 	var d = beginDate.getDate();
-
+	var workingDayNum = 0;
 	var calculateDays = function() {
 		var day = new Date(y, m, d);
-		days.push({date: day});
+		if (day.getDay() === 0 || day.getDay() === 6 ) {
+			days.push({ date: day, noWorkingDay: true });
+		} else {
+			workingDayNum++;
+			days.push({ date: day });
+		}
 		if (day < end) {
 			d++;
 			calculateDays();
 		}
 	};
 	calculateDays();
-	var velocity = total / (days.length - 1);
+	var velocity = total / workingDayNum;
 	async.map(days, function(item, cb) {
 		item.points = total;
-		total -= velocity;
+		//skip the reduction of velocity if it's sunday or saturday.
+		if (!item.noWorkingDay) {
+			total -= velocity;
+		}
 		cb(null, item);
 	},function(err, results) {
 		callback(null, results);
