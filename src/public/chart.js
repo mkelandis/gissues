@@ -174,6 +174,13 @@ function idealProgress(begin, due_on, total, callback) {
 		}
 		cb(null, item);
 	},function(err, results) {
+		if (err) {
+			return callback(err);
+		}
+		var now = new Date();
+		if (now > end) {
+			results.push({ date: now, points: 0});
+		}
 		callback(null, results);
 	});
 }
