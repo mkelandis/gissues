@@ -146,20 +146,24 @@ function actualProgress(issues, begin, total, callback) {
 function idealProgress(begin, due_on, total, callback) {
 	var days = [];
 	var end = new Date(due_on);
+	end = new Date(end.getFullYear(), end.getMonth(), end.getDate());
 	var beginDate = new Date(begin);
 	var y = beginDate.getFullYear();
 	var m = beginDate.getMonth();
 	var d = beginDate.getDate();
+
 	var workingDayNum = 0;
 	var calculateDays = function() {
 		var day = new Date(y, m, d);
 		if (day.getDay() === 0 || day.getDay() === 6 ) {
 			days.push({ date: day, noWorkingDay: true });
 		} else {
-			workingDayNum++;
+			if (day <= end) {//do not count last point as a working day
+				workingDayNum++;
+			}
 			days.push({ date: day });
 		}
-		if (day < end) {
+		if (day <= end) {
 			d++;
 			calculateDays();
 		}
