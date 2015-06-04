@@ -1,4 +1,6 @@
 var repos = [];
+var milestones = [];
+var labels = [];
 var issues;
 var loadedIssues;
 var minSentinel = { gissue: { order: 0 }};
@@ -40,6 +42,7 @@ function clearError() {
 }
 
 function createIssueElement(issueId) {
+
 	var issue = issues[issueId];
 
 	var labels = '';
@@ -53,19 +56,22 @@ function createIssueElement(issueId) {
 	}
 
 	var assignee = issue.assignee && issue.assignee.login ? '<span class="label notice gissueLabel" style="color: black">@' + issue.assignee.login + '</span>' : '';
-		
-	var size = issue.gissue ? '<span class="label size gissueLabel" style="color: black">size: ' + issue.gissue.size + '</span>' : '';
 
-	var html = 
-		'<div data-id="' + issueId + '" class="span4 gnote">'
-			+ '<a href="' + issue.html_url + '">#' + issue.number.toString() + '</a>'
+	var size = issue.gissue ? '<span class="label size gissueLabel" style="color: black">size: ' + issue.gissue.size + '</span>' : '';
+	var milestone = issue.milestone ? '<a href="https://github.com/' + options.repo + '/milestones/' + issue.milestone.title + '"><span class="label gissueLabel" style="background-color: #CCC; color: black"><i>' + issue.milestone.title + '</i></span></a>' : '';
+
+	var html =
+		'<div data-id="' + issueId + '" class="span5 gnote">'
+			+ '&nbsp;<a href="' + issue.html_url + '">#' + issue.number.toString() + '</a>'
 			+ ' ' + issue.title
+            + '<br/>'
+			+ milestone
 			+ labels
 			+ assignee
-			+ size
+			// + size
 		+ '</div>';
-	
-	return $(html); 
+
+	return $(html);
 }
 
 function updateIssues(issuesToUpdate) {
@@ -95,13 +101,13 @@ function updateIssues(issuesToUpdate) {
 			url: url,
 			type: 'POST',
 			data: JSON.stringify(entity),
-			processData: false, 
+			processData: false,
 			error: function (xhr, textStatus, errorThrown) {
 				error('An error occurred when updating an issue in GitHub.'
 					+ ' Status: ' + textStatus
 					+ ', Error: ' + errorThrown);
 			}
-		});				
+		});
 	}
 }
 
@@ -125,8 +131,8 @@ function onIssueChanged($currentIssue) {
 	currentIssue.gissue.size = newSize;
 	var issuesToUpdate = [ currentIssue ];
 
-	// all preceding siblings  that have their order equal to maxSentinel.gissue.order must 
-	// have their order and status set now so that effective order of 
+	// all preceding siblings  that have their order equal to maxSentinel.gissue.order must
+	// have their order and status set now so that effective order of
 	// the current issue is preserved on refresh
 
 	while (prevIssue.gissue.order === maxSentinel.gissue.order) {
@@ -154,7 +160,7 @@ function populateWhiteboard() {
 	issues.sort(function (a, b) {
 		return a.gissue.order - b.gissue.order;
 	});
-	
+
 	for (var i in issues) {
 		$('#' + issues[i].gissue.status).append(createIssueElement(i));
 	}
@@ -167,18 +173,18 @@ function populateWhiteboard() {
 		$(this).css('cursor', 'move');
 	});
 
-	$('.gissueList').sortable({ 
+	$('.gissueList').sortable({
 		connectWith: '.gissueList',
 		update: function (e, ui) {
 			if (!ui.sender) {
 				onIssueChanged($(ui.item[0]));
 			}
 		}
-	});			
+	});
 }
 
 function parseGissueStatus(issue) {
-	if (issue.body) {			
+	if (issue.body) {
 		var index = issue.body.lastIndexOf('@gissues:{');
 		if (index !== -1) {
 			try {
@@ -196,23 +202,24 @@ function parseGissueStatus(issue) {
 	}
 
 	issue.gissue = {
-		order: maxSentinel.gissue.order, 
+		order: maxSentinel.gissue.order,
 		status: 'backlog',
 		size: 0
 	};
 }
 
 function onIssuesLoaded() {
-	for (var issue in issues) {				
+	for (var issue in issues) {
 		parseGissueStatus(issues[issue]);
 	}
-
+    loadMilestones();
+    loadLabels();
 	populateWhiteboard();
 }
 
 function loadIssues(page, state, callback) {
 	var url = 'https://api.github.com/repos/' + options.repo + '/issues' +
-		'?' + options.access_token + 
+		'?' + options.access_token +
 		'&per_page=100' +
 		'&page=' + page +
 		'&state=' + state;
@@ -239,7 +246,7 @@ function loadIssues(page, state, callback) {
 			}
 			else {
 				callback('An error occurred when retrieving issues from GitHub. Make sure issue tracking is enabled. '
-					+ '<a href="https://github.com/' 
+					+ '<a href="https://github.com/'
 					+ options.repo + '/admin" class="btn small gsmall success">Check now...</a>');
 			}
 		},
@@ -270,13 +277,13 @@ function getQuery() {
 	var delim = '?';
 	var query= '';
 	for (var p in options) {
-		if (options[p] && 'access_token' !== p && 'specifiedRepo' !==p ) {
+		if (options[p] && 'access_token' !== p && 'specifiedRepo' !== p ) {
 			query += delim + p + '=' + encodeURIComponent(options[p]);
 			delim = '&';
 		}
 	}
 
-	return query;	
+	return query;
 }
 
 function refreshPage() {
@@ -321,11 +328,12 @@ function onRepoSelected(repo, refresh) {
 			loadedIssues = 0;
 			async.parallel([
 				function(callback) {
-					loadIssues(1, 'open', callback);	
-				},
-				function(callback) {
-					loadIssues(1, 'closed', callback);	
+					loadIssues(1, 'open', callback);
 				}
+                // why do we care about closed issues here?
+                //function(callback) {
+					//loadIssues(1, 'closed', callback);
+                //}
 			],
 			function(err, results) {
 				if (err) {
@@ -416,7 +424,7 @@ function loadRepositories() {
 		});
 	}
 
-	// load orgs the user belongs to			
+	// load orgs the user belongs to
 
 	var url = 'https://api.github.com/user/orgs'
 		+ '?' + options.access_token
@@ -459,22 +467,123 @@ function loadRepositories() {
 										onReposLoaded();
 									}
 								}
-							});				
+							});
 						}
 						else if (++loadedSources === targetSources) {
 							onReposLoaded();
-						}			
+						}
 					}
 				}
 			}
 		}
-	});				
+	});
 }
+
+function onMilestonesLoaded() {
+    var matchingMilestone;
+
+    for (var index in milestones) {
+        var milestoneTitle = milestones[index].title;
+        var milestone = milestones[index].number;
+        if (options.milestone === ('' + milestone)) {
+            matchingMilestone = milestone;
+        }
+
+        $('#milestone').append($(
+            '<option value="' + milestone + '">' + milestoneTitle + '</option>'
+        ));
+    }
+
+    $('#milestone').change(function(){
+        var milestone = $(this).val();
+        onMilestoneSelected(milestone === "all" ? undefined : milestone, true);
+    });
+
+    if (matchingMilestone) {
+        $('#milestone').val(matchingMilestone);
+        onMilestoneSelected(matchingMilestone);
+    }
+}
+
+function onMilestoneSelected(milestone, refresh) {
+	options.milestone = milestone;
+	$('#go').attr('href', getQuery());
+	if (refresh) {
+		refreshPage();
+	}
+}
+
+function loadMilestones() {
+    var url = 'https://api.github.com/repos/' + options.repo + '/milestones?state=open';
+    $.ajax({
+        url: url,
+        error: function (xhr, textStatus, errorThrown) {
+            error('An error occurred when retrieving user repositories from GitHub.'
+                + ' Status: ' + textStatus
+                + ', Error: ' + errorThrown);
+        },
+        success: function (data, textStatus, xhr) {
+            milestones = milestones.concat(data, {number: 'none', title: 'Not Assigned'});
+            onMilestonesLoaded();
+        }
+    });
+}
+
+function onLabelsSelected(label, refresh) {
+    options.labels = label;
+    $('#go').attr('href', getQuery());
+	if (refresh) {
+		refreshPage();
+	}
+}
+
+function onLabelsLoaded() {
+	var matchingLabel;
+
+	for (var index in labels) {
+        var label = labels[index].name;
+
+        $('#labels').append($(
+            '<option value="' + label + '">' + label + '</option>'
+        ));
+
+        if (label === '' + options.labels) {
+			matchingLabel = label;
+		}
+    }
+    $('#labels').change(function() {
+		var label = $(this).val();
+        onLabelsSelected(label === "all" ? undefined : label, true);
+    });
+
+	if (matchingLabel) {
+		$('#labels').val(matchingLabel);
+		onLabelsSelected(matchingLabel);
+	}
+}
+
+function loadLabels() {
+    var url = 'https://api.github.com/repos/' + options.repo + '/labels';
+    $.ajax({
+        url: url,
+        error: function (xhr, textStatus, errorThrown) {
+            error('An error occurred when retrieving user repositories from GitHub.'
+                + ' Status: ' + textStatus
+                + ', Error: ' + errorThrown);
+        },
+        success: function (data, textStatus, xhr) {
+            labels = labels.concat(data);
+            onLabelsLoaded();
+        }
+    });
+}
+
+
 function updateOptions($changedElement) {
 	var val = $changedElement.val() ? $changedElement.val().replace(' ', '') : '';
 	var id = $changedElement.attr('id');
 	options[id] = '' === val ? undefined : val;
-	$('#go').attr('href', getQuery());	
+	$('#go').attr('href', getQuery());
 }
 
 function onFilterChanged() {
@@ -484,7 +593,7 @@ function onFilterChanged() {
 function onFilterApproved(event) {
 	if (event.which === 13) {
 		updateOptions($(this));
-		refreshPage();	
+		refreshPage();
 	}
 }
 
@@ -498,17 +607,18 @@ $(function() {
 	$('#go').attr('href', getQuery());//TODO there is post-get 304 problem if the href doesn't change.
 	$(function() {
 		//TODO need refactoring
-		var sel = '<select style="width: auto"><option selected="selected" value="-1">--</option><option value="1">1</option>' + 
+		var sel = '<select style="width: auto"><option selected="selected" value="-1">--</option><option value="1">1</option>' +
 			'<option value="2">2</option><option value="3">3</option><option value="4">4</option>' +
 			'<option value="5">5</option><option value="6">6</option><option value="7">7</option></select>';
 		var span = '<span class="label size gissueLabel" style="color: black; cursor: pointer;">size:0</span>';
-		$('div.glive').on('click', 'div.span4 > span.size', function(e) {
+		$('div.glive').on('click', 'div.span5 > span.size', function(e) {
 			$(this).replaceWith(sel);
 		});
 		$('div.glive').on('change', 'select', function() {
-			var $currentIssue = $(this).parent('.span4.gnote');
+			var $currentIssue = $(this).parent('.span5.gnote');
 			$(this).replaceWith(span.replace('size:0', 'size:'+$(this).val()));
 			onIssueChanged($currentIssue);
 		});
 	});
+
 });

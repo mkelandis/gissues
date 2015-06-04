@@ -13,7 +13,7 @@ body
 }
 .gnote
 {
-	background-color: #AAA;
+	background-color: #EEE;
 	margin-left: auto;
 	margin-right: auto;
 	margin-top: 4px;
@@ -54,6 +54,13 @@ body
 {
 	text-align: justify;
 }
-.container{
+.container {
 	width: 1120px;
+}
+.container-fluid {
+	margin: 0 auto;
+	width: 80%;
+}
+.topbar {
+	margin-left: -80px;
 }

@@ -3,16 +3,16 @@
 	<title>gissues</title>
 	<link rel="stylesheet" href="bootstrap.min.css">
 	<link rel="stylesheet" href="style.css">
-	<link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.17/themes/base/jquery-ui.css" type="text/css" media="all" />
-	<link rel="stylesheet" href="http://static.jquery.com/ui/css/demo-docs-theme/ui.theme.css" type="text/css" media="all" />
-	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-	<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.17/jquery-ui.min.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.17/themes/base/jquery-ui.css" type="text/css" media="all" />
+	<link rel="stylesheet" href="ui.theme.css" type="text/css" media="all" />
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+	<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.17/jquery-ui.min.js" type="text/javascript"></script>
 	<script src="jquery.ui.touch-punch.min.js"></script>
 	<script src="bootstrap-dropdown.js" type="text/javascript"></script>
-	<script src="http://cdnjs.cloudflare.com/ajax/libs/async/0.2.7/async.min.js" type="text/javascript"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/async/0.2.7/async.min.js" type="text/javascript"></script>
 	<script src="gissues.js" type="text/javascript"></script>
 	<script type="text/javascript">
-		var options = { access_token: '<%- cookie.access_token %>', specifiedRepo: JSON.parse('<%- specifiedRepo %>')};
+		var options = { access_token: '<%- cookie.access_token %>' };
 	</script>
 	<script type="text/javascript">
 
@@ -53,15 +53,19 @@
 						<select name="repo" id="repo" class="large">
 							<option value="none">&lt;repository&gt;</option>
 						</select>
-						<input class="small ginput gfilter" id="labels" name="labels" type="text" placeholder="labels">
-						<input class="small ginput gfilter" id="assignee" name="assignee" type="text" placeholder="assigned">
+						<select name="milestone" id="milestone" class="medium">
+						  <option value="all">&lt;milestone&gt;</option>
+						</select>
+						<select name="labels" id="labels" class="small">
+							<option value="all">&lt;labels&gt;</option>
+						</select>
+ 						<input class="small ginput gfilter" id="assignee" name="assignee" type="text" placeholder="assigned">
 						<input class="small ginput gfilter" id="mentioned" name="mentioned" type="text" placeholder="mentioned">
-						<input class="small ginput gfilter" id="milestone" name="milestone" type="text" placeholder="milestone">
 						<a id="go" href="#" class="btn success small grefreshLink">Go</a>
 					</form>
 					<ul class="nav">
 	  					<li>
-							<a id="burndown" target="_blank">BurndownChart</a>
+							<a id="burndown" target="_blank">Burndown</a>
 						</li>
 						<li>
 							<a href="http://github.com/tjanczuk/gissues">Support</a>
@@ -93,26 +97,26 @@
 			</div>
 		</div>
 	</div>
-	<div class="container">
+	<div class="container-fluid">
 		<div id="gerror" class="row hide">
 			<div id="errorContainer" class="span16 alert-message gerror">
 				<p id="errorMessage" class="galert-message-content"></p>
 			</div>
 		</div>
 		<div class="row glive hide">
-			<div class="span4"><div class="alert-message block-message info gheading">Backlog</div></div>
-			<div class="span4"><div class="alert-message block-message error gheading">Not started</div></div>
-			<div class="span4"><div class="alert-message block-message warning gheading">In progress</div></div>
-			<div class="span4"><div class="alert-message block-message success gheading">Done</div></div>
+			<div class="span5"><div class="alert-message block-message info gheading">Backlog</div></div>
+			<div class="span5"><div class="alert-message block-message error gheading">Not started</div></div>
+			<div class="span5"><div class="alert-message block-message warning gheading">In progress</div></div>
+			<div class="span5"><div class="alert-message block-message success gheading">Done</div></div>
 		</div>
 		<div class="row glive hide">
-			<div id="backlog" class="span4 gissueList">
+			<div id="backlog" class="span5 gissueList">
 			</div>
-			<div id="notstarted" class="span4 gissueList">
+			<div id="notstarted" class="span5 gissueList">
 			</div>
-			<div id="inprogress" class="span4 gissueList">
+			<div id="inprogress" class="span5 gissueList">
 			</div>
-			<div id="done" class="span4 gissueList">
+			<div id="done" class="span5 gissueList">
 			</div>
 		</div>
 	</div>
