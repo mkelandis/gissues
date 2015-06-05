@@ -58,11 +58,11 @@ function createIssueElement(issueId) {
 	var assignee = issue.assignee && issue.assignee.login ? '<span class="label notice gissueLabel" style="color: black">@' + issue.assignee.login + '</span>' : '';
 
 	var size = issue.gissue ? '<span class="label size gissueLabel" style="color: black">size: ' + issue.gissue.size + '</span>' : '';
-	var milestone = issue.milestone ? '<a href="https://github.com/' + options.repo + '/milestones/' + issue.milestone.title + '"><span class="label gissueLabel" style="background-color: #CCC; color: black"><i>' + issue.milestone.title + '</i></span></a>' : '';
+	var milestone = issue.milestone ? '<a target="_github" href="https://github.com/' + options.repo + '/milestones/' + issue.milestone.title + '"><span class="label gissueLabel" style="background-color: #CCC; color: black"><i>' + issue.milestone.title + '</i></span></a>' : '';
 
 	var html =
-		'<div data-id="' + issueId + '" class="span5 gnote">'
-			+ '&nbsp;<a href="' + issue.html_url + '">#' + issue.number.toString() + '</a>'
+		'<div data-id="' + issueId + '" class="span6 gnote">'
+			+ '&nbsp;<a target="_github" href="' + issue.html_url + '">#' + issue.number.toString() + '</a>'
 			+ ' ' + issue.title
             + '<br/>'
 			+ milestone
@@ -611,11 +611,11 @@ $(function() {
 			'<option value="2">2</option><option value="3">3</option><option value="4">4</option>' +
 			'<option value="5">5</option><option value="6">6</option><option value="7">7</option></select>';
 		var span = '<span class="label size gissueLabel" style="color: black; cursor: pointer;">size:0</span>';
-		$('div.glive').on('click', 'div.span5 > span.size', function(e) {
+		$('div.glive').on('click', 'div.span6 > span.size', function(e) {
 			$(this).replaceWith(sel);
 		});
 		$('div.glive').on('change', 'select', function() {
-			var $currentIssue = $(this).parent('.span5.gnote');
+			var $currentIssue = $(this).parent('.span6.gnote');
 			$(this).replaceWith(span.replace('size:0', 'size:'+$(this).val()));
 			onIssueChanged($currentIssue);
 		});
