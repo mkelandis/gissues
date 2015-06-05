@@ -37,6 +37,13 @@ If you want to run your own installation of the app similar to [http://gissues.c
   - Set the `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` environment variables to the right value. This is the preferred way when deploying to Azure or AppHarbor sites, so you don't have to commit secrets to your repository.
   - modify the `src/config.json` file with the client_id and client_secret value provided for your application by GitHub.
 
+***Heroku Specifics***
+
+- Create a git branch for deploying to heroku, add your config.json to this branch.
+- Heroku wants to see the "src" folder as the repository so use the subtree command to push from the newly created branch: `git subtree push --prefix src heroku heroku` 
+- **running local with foreman**: cd src; foreman start web (from heroku branch with config.json set) 
+
+
 **Contributions**
 
 I do welcome contributions via pull requests. Thank you for making gissues.com better.
