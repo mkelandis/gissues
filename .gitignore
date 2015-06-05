@@ -2,4 +2,3 @@ node_modules
 config.json.secret
 .idea/*
 *.iml
-src/config.json
